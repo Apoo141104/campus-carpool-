@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 //this is a changed file.
+// changed file 2
 class Profile {
 public:
     std::string role;
