@@ -3,7 +3,6 @@
 #include <string>
 #include <map>
 
-//New code
 class Profile {
 public:
     std::string role;
@@ -25,6 +24,7 @@ public:
     std::string course;
     int yearOfStudy;
     Profile profile;
+    int currentRideIndex;
 
     User(const std::string& userName, const std::string& userEmail, const std::string& userPassword,
          const std::string& userBatch, const std::string& userEnrollmentNo, const std::string& userCourse,
@@ -75,33 +75,34 @@ public:
     CarpoolApp() : currentUser(nullptr) {}
 
     void signUp() {
-        std::string userName, userEmail, userPassword, userBatch, userEnrollmentNo, userCourse;
-        int userYearOfStudy;
-        std::cout << "User Registration" << std::endl;
-        std::cin.ignore(); // Clear the input buffer
-        std::cout << "Full Name: ";
-        std::getline(std::cin, userName);
-        std::cout << "Email: ";
-        std::cin >> userEmail;
-        std::cout << "Password: ";
-        std::cin >> userPassword;
-        std::cout << "Batch: ";
-        std::cin.ignore();
-        std::getline(std::cin, userBatch);
-        std::cout << "Enrollment Number: ";
-        std::cin >> userEnrollmentNo;
-        std::cout << "Course: ";
-        std::cin.ignore();
-        std::getline(std::cin, userCourse);
-        std::cout << "Year of Study: ";
-        std::cin >> userYearOfStudy;
+    std::string userName, userEmail, userPassword, userCourse, userBatch, userEnrollmentNo;
+    int userYearOfStudy;
 
-        Profile userProfile("student", std::to_string(userYearOfStudy), userCourse, userBatch);
-        carpoolSystem.users.push_back(User(userName, userEmail, userPassword, userBatch,
-                                           userEnrollmentNo, userCourse, userYearOfStudy, userProfile));
+    std::cout << "User Registration" << std::endl;
+    std::cin.ignore(); // Clear the input buffer
+    std::cout << "Full Name: ";
+    std::getline(std::cin, userName);
+    std::cout << "Email: ";
+    std::cin >> userEmail;
+    std::cout << "Password: ";
+    std::cin >> userPassword;
+    std::cout << "Course: ";
+    std::cin.ignore();
+    std::getline(std::cin, userCourse);
+    std::cout << "Year of Study: ";
+    std::cin >> userYearOfStudy;
+    std::cout << "Batch: ";
+    std::cin.ignore();
+    std::getline(std::cin, userBatch);
+    std::cout << "Enrollment Number: ";
+    std::cin >> userEnrollmentNo;
 
-        std::cout << "Registration successful!" << std::endl;
-    }
+    Profile userProfile("student", std::to_string(userYearOfStudy), userCourse, userBatch);
+    carpoolSystem.users.push_back(User(userName, userEmail, userPassword, userBatch,
+                                       userEnrollmentNo, userCourse, userYearOfStudy, userProfile));
+
+    std::cout << "Registration successful!" << std::endl;
+}
 
     void login() {
         std::string email, password;
@@ -139,41 +140,49 @@ public:
 
         int option;
         do {
-            std::cout << "====== Carpool Menu ======" << std::endl;
-            std::cout << "1. Offer a Carpool" << std::endl;
-            std::cout << "2. View Carpool Requests" << std::endl;
-            std::cout << "3. Match Carpool Requests" << std::endl;
-            std::cout << "4. Accept a Ride" << std::endl;
-            std::cout << "5. Mark Ride as Completed" << std::endl;
-            std::cout << "6. Logout" << std::endl;
-            std::cout << "===========================" << std::endl;
-            std::cout << "Enter your option (1-6): ";
-            std::cin >> option;
+        std::cout << "====== Carpool Menu ======" << std::endl;
+        std::cout << "1. Offer a Carpool" << std::endl;
+        std::cout << "2. View Carpool Requests" << std::endl;
+        std::cout << "3. Match Carpool Requests" << std::endl;
+        std::cout << "4. Accept a Ride" << std::endl;
+        std::cout << "5. Mark Ride as Completed" << std::endl;
+        std::cout << "6. Cancel Ride" << std::endl;
+        std::cout << "7. Report User" << std::endl;  // New option for reporting a user
+        std::cout << "8. Logout" << std::endl;
+        std::cout << "===========================" << std::endl;
+        std::cout << "Enter your option (1-8): ";
+        std::cin >> option;
 
-            switch (option) {
-                case 1:
-                    offerCarpool();
-                    break;
-                case 2:
-                    viewCarpoolRequests();
-                    break;
-                case 3:
-                    matchCarpoolRequests();
-                    break;
-                case 4:
-                    acceptRide();
-                    break;
-                case 5:
-                    markRideAsCompleted();
-                    break;
-                case 6:
-                    logout();
-                    return;
-                default:
-                    std::cout << "Invalid option. Please enter a number between 1 and 6." << std::endl;
-            }
+        switch (option) {
+            case 1:
+                offerCarpool();
+                break;
+            case 2:
+                viewCarpoolRequests();
+                break;
+            case 3:
+                matchCarpoolRequests();
+                break;
+            case 4:
+                acceptRide();
+                break;
+            case 5:
+                markRideAsCompleted();
+                break;
+            case 6:
+                cancelRide();
+                break;
+            case 7:
+                reportUser();
+                break;  // New case for reporting a user
+            case 8:
+                logout();
+                return;
+            default:
+                std::cout << "Invalid option. Please enter a number between 1 and 8." << std::endl;
+        }
 
-        } while (option != 6);
+    } while (option != 8);
     }
 
 private:
@@ -316,6 +325,44 @@ private:
 
         std::cout << "User 2 - Location: " << request2.location << ", Date: " << request2.date
                   << ", Time: " << request2.time << ", Vehicle Type: " << request2.vehicleType << std::endl;
+    }
+    void cancelRide() {
+        if (currentUser == nullptr) {
+            std::cout << "Error: Please login before accessing carpool features." << std::endl;
+            return;
+        }
+
+        if (currentUser->currentRideIndex != -1) {
+            Ride& currentRide = carpoolSystem.rides[currentUser->currentRideIndex];
+            std::cout << "Cancelling your current ride..." << std::endl;
+            currentRide.availableSeats += currentRide.passengers.size(); // Add back the booked seats
+            currentRide.passengers.clear(); // Remove all passengers
+            currentUser->currentRideIndex = -1; // Set user's current ride index to -1
+            std::cout << "Ride cancelled successfully!" << std::endl;
+        } else {
+            std::cout << "You do not have a current ride to cancel." << std::endl;
+        }
+    }
+    void reportUser() {
+        if (currentUser == nullptr) {
+            std::cout << "Error: Please login before accessing carpool features." << std::endl;
+            return;
+        }
+
+        std::string reportedEmail, reason;
+        std::cout << "Enter the email of the user you want to report: ";
+        std::cin >> reportedEmail;
+
+        // You can also prompt the user for a reason for reporting
+        std::cout << "Enter the reason for reporting: ";
+        std::cin.ignore();
+        std::getline(std::cin, reason);
+
+        // Implement your logic to handle the user report here
+        // For example, you might add the report to a list or take appropriate actions
+        // You can also provide feedback to the user that the report has been submitted
+
+        std::cout << "User reported successfully!" << std::endl;
     }
 };
 
