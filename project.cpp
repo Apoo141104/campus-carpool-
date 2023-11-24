@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 
+//New code
 class Profile {
 public:
     std::string role;
